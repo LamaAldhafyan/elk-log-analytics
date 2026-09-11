@@ -1,0 +1,5 @@
+2026-09-11 06:10:01 INFO service=web-app status=200 message="Request processed successfully"
+2026-09-11 06:10:05 ERROR service=api-service status=500 message="Internal server error"
+2026-09-11 06:10:08 WARN service=database-service status=429 message="Database connection pool nearing limit"
+2026-09-11 06:10:12 INFO service=auth-service status=200 message="User login successful"
+2026-09-11 06:10:16 ERROR service=payment-service status=503 message="Payment gateway timeout"
