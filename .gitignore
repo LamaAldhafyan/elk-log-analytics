@@ -1,0 +1,9 @@
+# Logstash runtime data
+logstash/data/*
+
+# Keep the empty data directory structure
+!logstash/data/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -18,6 +18,7 @@ services:
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
       - ./logs:/usr/share/logstash/logs
+      - ./logstash/data:/usr/share/logstash/data
     ports:
       - "5044:5044"
     depends_on:
