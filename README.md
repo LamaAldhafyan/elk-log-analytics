@@ -1,66 +1,98 @@
-# ELK Log Analytics
+﻿# ELK Stack Log Analytics
 
 Internal Log Analytics and Search Platform based on the ELK Stack.
 
-## Architecture
+## Project Description
 
-The project uses:
+This project provides a centralized platform for collecting, parsing, storing, searching, and visualizing application logs.
+
+The platform uses the ELK Stack:
 
 * Elasticsearch for storing and searching logs
 * Logstash for collecting and parsing logs
 * Kibana for visualization and analysis
-* Docker Compose for running the ELK stack
-* Azure VM as the hosting environment
+* Docker Compose for running the ELK Stack
+* Terraform for Azure infrastructure provisioning
+* Azure Virtual Machine for hosting the platform
+
+## Architecture
+
+The log processing flow is:
+
+Application Log Dataset
+→ Logstash
+→ Elasticsearch
+→ Kibana
+
+Logstash reads the application log dataset, parses each record using Grok, converts the timestamp, and sends the structured logs to Elasticsearch.
+
+Kibana connects to Elasticsearch and provides dashboards for analyzing the logs.
 
 ## Project Structure
 
 ```text
-elk-log-analytics/
-├── compose.yaml
-├── README.md
-├── logs/
+ELK_Stack_Group01_Code_v1/
+├── 01_data/
 │   └── app.log
-├── logstash/
-│   └── logstash.conf
-└── .gitignore
+├── 02_src/
+│   ├── compose.yaml
+│   ├── logstash/
+│   │   └── logstash.conf
+│   └── terraform/
+│       ├── main.tf
+│       ├── variables.tf
+│       ├── outputs.tf
+│       ├── versions.tf
+│       └── .terraform.lock.hcl
+├── 03_assets/
+│   ├── elk-dashboard.png
+│   ├── error-status-analysis.png
+│   └── log-summary.png
+├── requirements.txt
+└── README.md
 ```
 
-## Logstash Pipeline
+## Technologies
 
-The pipeline reads application logs from:
+* Elasticsearch 9.5.3
+* Logstash 9.5.3
+* Kibana 9.5.3
+* Docker
+* Docker Compose
+* Terraform
+* Microsoft Azure
+* Ubuntu Linux
+* Bash
 
-```text
-logs/app.log
-```
+## Prerequisites
 
-Logstash parses each log using Grok and extracts the following fields:
+To run the ELK Stack locally, install:
 
-* `timestamp`
-* `level`
-* `service`
-* `status_code`
-* `log_message`
+* Docker Desktop with Docker Compose
+* Git (optional)
 
-The parsed timestamp is also mapped to Elasticsearch's `@timestamp` field.
+Terraform is required only if the Azure infrastructure needs to be provisioned from the Terraform configuration.
 
-Logs are stored in the Elasticsearch index:
-
-```text
-project-logs
-```
+No Python dependencies are required for this project.
 
 ## Running the ELK Stack
 
-Start the services:
+Open a terminal in the `02_src` directory:
+
+```bash
+cd 02_src
+```
+
+Start the ELK services:
 
 ```bash
 docker compose up -d
 ```
 
-Check running containers:
+Check the running containers:
 
 ```bash
-docker ps
+docker compose ps
 ```
 
 The services use the following ports:
@@ -69,33 +101,35 @@ The services use the following ports:
 * Kibana: `5601`
 * Logstash: `5044`
 
-## Verify Log Ingestion
+## Logstash Pipeline
 
-Check the number of documents in the Elasticsearch index:
+The Logstash pipeline consists of the following stages:
 
-```bash
-curl -s http://localhost:9200/project-logs/_count
-```
+1. File input reads `01_data/app.log`
+2. Grok parses the log records
+3. Date filter converts the log timestamp to Elasticsearch `@timestamp`
+4. Fingerprint generates a unique document ID
+5. Elasticsearch stores the parsed records in the `project-logs` index
 
-The current test dataset contains **100 log records**.
+The extracted fields include:
 
-Check for Grok parsing failures:
+* `timestamp`
+* `level`
+* `service`
+* `status_code`
+* `log_message`
 
-```bash
-curl -s "http://localhost:9200/project-logs/_count?q=tags:grokparsefailure"
-```
+## Dataset
 
-The current result is **0 parsing failures**.
+The current test dataset contains 100 application log records.
 
-## Current Test Dataset
-
-The sample application log contains:
+The dataset includes:
 
 * INFO
 * WARNING
 * ERROR
 
-It includes multiple services and HTTP status codes such as:
+It also contains multiple services and HTTP status codes, including:
 
 * 200
 * 201
@@ -109,13 +143,81 @@ It includes multiple services and HTTP status codes such as:
 * 503
 * 504
 
-## Logstash Configuration
+## Verification
 
-The Logstash pipeline uses:
+Check the number of documents stored in Elasticsearch:
 
-* File input for reading `app.log`
-* Grok filter for parsing log fields
-* Date filter for setting `@timestamp`
-* Fingerprint filter to generate unique document IDs
-* Elasticsearch output for storing parsed logs
-* Ruby debug output for troubleshooting
+```bash
+curl -s http://localhost:9200/project-logs/_count
+```
+
+Check for Grok parsing failures:
+
+```bash
+curl -s "http://localhost:9200/project-logs/_count?q=tags:grokparsefailure"
+```
+
+Expected test results:
+
+* Total log records: 100
+* Grok parsing failures: 0
+* Error records: 22
+* Error rate: 22%
+
+## Kibana
+
+Kibana is available on the Azure VM:
+
+http://20.5.78.25:5601
+
+The dashboard provides visualizations including:
+
+* Total log count
+* Total errors
+* Error rate
+* Log count by level
+* Status code distribution
+* Errors over time
+
+### Dashboard
+
+![Kibana Dashboard](03_assets/elk-dashboard.png)
+
+### Error & Status Analysis
+
+![Error & Status Analysis](03_assets/error-status-analysis.png)
+
+### Log Summary
+
+![Log Summary](03_assets/log-summary.png)
+
+## Terraform
+
+The `02_src/terraform` directory contains the Terraform configuration used to provision the Azure infrastructure.
+
+Main Terraform files:
+
+* `main.tf`
+* `variables.tf`
+* `outputs.tf`
+* `versions.tf`
+* `.terraform.lock.hcl`
+
+Terraform state files and sensitive configuration files are intentionally excluded from the submission.
+
+## Limitations
+
+* Elasticsearch security is disabled in the current demonstration environment.
+* Elasticsearch is configured as a single-node deployment.
+* The project uses a sample application log dataset rather than a large production dataset.
+* The current version does not implement AI-based anomaly detection.
+
+## Future Improvements
+
+Possible future improvements include:
+
+* Enabling Elasticsearch security and authentication
+* Deploying a larger distributed Elasticsearch cluster
+* Using larger and more diverse production-like datasets
+* Adding automated alerting
+* Adding AI-based anomaly detection and log analysis

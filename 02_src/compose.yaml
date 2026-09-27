@@ -17,8 +17,7 @@ services:
     container_name: logstash
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-      - ./logs:/usr/share/logstash/logs
-      - ./logstash/data:/usr/share/logstash/data
+      - ../01_data:/usr/share/logstash/logs
     ports:
       - "5044:5044"
     depends_on:
