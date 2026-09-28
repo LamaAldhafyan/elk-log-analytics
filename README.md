@@ -1,149 +1,144 @@
 ﻿# ELK Stack Log Analytics
 
-Internal Log Analytics and Search Platform based on the ELK Stack.
+## 1. Project Summary
 
-## Project Description
+This project is an Internal Log Analytics and Search Platform based on the ELK Stack.
 
-This project provides a centralized platform for collecting, parsing, storing, searching, and visualizing application logs.
+The platform collects, parses, stores, searches, and visualizes application logs using:
 
-The platform uses the ELK Stack:
-
-* Elasticsearch for storing and searching logs
-* Logstash for collecting and parsing logs
-* Kibana for visualization and analysis
-* Docker Compose for running the ELK Stack
-* Terraform for Azure infrastructure provisioning
-* Azure Virtual Machine for hosting the platform
-
-## Architecture
+* **Elasticsearch** for storing, indexing, and searching logs
+* **Logstash** for collecting and parsing log data
+* **Kibana** for log visualization and analysis
+* **Docker Compose** for running the ELK services
+* **Terraform** for provisioning the Azure infrastructure
+* **Microsoft Azure Virtual Machine** for hosting the platform
 
 The log processing flow is:
 
-Application Log Dataset
-→ Logstash
-→ Elasticsearch
-→ Kibana
+```text
+Application Logs
+      ↓
+   Logstash
+      ↓
+Elasticsearch
+      ↓
+    Kibana
+      ↓
+ Dashboards
+```
 
-Logstash reads the application log dataset, parses each record using Grok, converts the timestamp, and sends the structured logs to Elasticsearch.
+The project uses an application log dataset containing **100 log records**. Logstash reads the dataset, extracts structured fields using Grok, converts the timestamp, and sends the processed records to Elasticsearch under the `project-logs` index.
 
-Kibana connects to Elasticsearch and provides dashboards for analyzing the logs.
+Kibana connects to Elasticsearch and provides dashboards for analyzing log levels, errors, status codes, and log activity over time.
 
-## Project Structure
+---
+
+## 2. Requirements
+
+### Software
+
+The following tools are required to run the project:
+
+* Docker Desktop
+* Docker Compose
+* Git (optional)
+* Terraform (required only for Azure infrastructure provisioning)
+* A web browser for accessing Kibana
+
+### Docker Images
+
+The project uses:
+
+* Elasticsearch `9.5.3`
+* Logstash `9.5.3`
+* Kibana `9.5.3`
+
+### Infrastructure
+
+For Azure deployment:
+
+* Microsoft Azure subscription
+* Azure Virtual Machine
+* Ubuntu Linux
+* Terraform
+
+No Python packages or external Python dependencies are required.
+
+---
+
+## 3. Installation
+
+### Step 1: Extract the Project
+
+Extract the project ZIP file:
 
 ```text
 ELK_Stack_Group01_Code_v1/
-├── 01_data/
-│   └── app.log
-├── 02_src/
-│   ├── compose.yaml
-│   ├── logstash/
-│   │   └── logstash.conf
-│   └── terraform/
-│       ├── main.tf
-│       ├── variables.tf
-│       ├── outputs.tf
-│       ├── versions.tf
-│       └── .terraform.lock.hcl
-├── 03_assets/
-│   ├── elk-dashboard.png
-│   ├── error-status-analysis.png
-│   └── log-summary.png
-├── requirements.txt
-└── README.md
 ```
 
-## Technologies
+### Step 2: Open the Project Directory
 
-* Elasticsearch 9.5.3
-* Logstash 9.5.3
-* Kibana 9.5.3
-* Docker
-* Docker Compose
-* Terraform
-* Microsoft Azure
-* Ubuntu Linux
-* Bash
-
-## Prerequisites
-
-To run the ELK Stack locally, install:
-
-* Docker Desktop with Docker Compose
-* Git (optional)
-
-Terraform is required only if the Azure infrastructure needs to be provisioned from the Terraform configuration.
-
-No Python dependencies are required for this project.
-
-## Running the ELK Stack
-
-Open a terminal in the `02_src` directory:
+Open a terminal and navigate to the `02_src` directory:
 
 ```bash
-cd 02_src
+cd ELK_Stack_Group01_Code_v1/02_src
 ```
 
-Start the ELK services:
+### Step 3: Verify Docker
+
+Make sure Docker Desktop is running:
+
+```bash
+docker --version
+```
+
+Verify Docker Compose:
+
+```bash
+docker compose version
+```
+
+No `pip install` command is required because the project does not use Python dependencies.
+
+---
+
+## 4. Run the Project
+
+### Step 1: Start the ELK Stack
+
+From the `02_src` directory, run:
 
 ```bash
 docker compose up -d
 ```
 
-Check the running containers:
+This starts:
+
+* Elasticsearch
+* Logstash
+* Kibana
+
+### Step 2: Check the Services
+
+Run:
 
 ```bash
 docker compose ps
 ```
 
-The services use the following ports:
+All three services should be running.
 
-* Elasticsearch: `9200`
-* Kibana: `5601`
-* Logstash: `5044`
+### Step 3: Verify Elasticsearch
 
-## Logstash Pipeline
+Open:
 
-The Logstash pipeline consists of the following stages:
+```text
+http://localhost:9200
+```
 
-1. File input reads `01_data/app.log`
-2. Grok parses the log records
-3. Date filter converts the log timestamp to Elasticsearch `@timestamp`
-4. Fingerprint generates a unique document ID
-5. Elasticsearch stores the parsed records in the `project-logs` index
+Elasticsearch should return its cluster information.
 
-The extracted fields include:
-
-* `timestamp`
-* `level`
-* `service`
-* `status_code`
-* `log_message`
-
-## Dataset
-
-The current test dataset contains 100 application log records.
-
-The dataset includes:
-
-* INFO
-* WARNING
-* ERROR
-
-It also contains multiple services and HTTP status codes, including:
-
-* 200
-* 201
-* 204
-* 401
-* 404
-* 408
-* 429
-* 500
-* 502
-* 503
-* 504
-
-## Verification
+### Step 4: Verify the Log Data
 
 Check the number of documents stored in Elasticsearch:
 
@@ -151,26 +146,37 @@ Check the number of documents stored in Elasticsearch:
 curl -s http://localhost:9200/project-logs/_count
 ```
 
+Expected result:
+
+```text
+100 documents
+```
+
+### Step 5: Verify Logstash Parsing
+
 Check for Grok parsing failures:
 
 ```bash
 curl -s "http://localhost:9200/project-logs/_count?q=tags:grokparsefailure"
 ```
 
-Expected test results:
+Expected result:
 
-* Total log records: 100
-* Grok parsing failures: 0
-* Error records: 22
-* Error rate: 22%
+```text
+0 parsing failures
+```
 
-## Kibana
+### Step 6: Open Kibana
 
-Kibana is available on the Azure VM:
+Open:
 
-http://20.5.78.25:5601
+```text
+http://localhost:5601
+```
 
-The dashboard provides visualizations including:
+Kibana can be used to search and visualize the processed log data.
+
+The project dashboard includes:
 
 * Total log count
 * Total errors
@@ -179,40 +185,75 @@ The dashboard provides visualizations including:
 * Status code distribution
 * Errors over time
 
-### Dashboard
+### Stopping the Project
 
-![Kibana Dashboard](03_assets/elk-dashboard.png)
+To stop the services:
+
+```bash
+docker compose down
+```
+
+---
+
+## Project Visuals
+
+The `03_assets` directory contains screenshots of the Kibana dashboards and log analysis results:
+
+* `elk-dashboard.png` — Main ELK Stack dashboard
+* `error-status-analysis.png` — Error and HTTP status code analysis
+* `log-summary.png` — Log summary and overview
+
+### Main Dashboard
+
+![ELK Dashboard](03_assets/elk-dashboard.png)
 
 ### Error & Status Analysis
 
-![Error & Status Analysis](03_assets/error-status-analysis.png)
+![Error and Status Analysis](03_assets/error-status-analysis.png)
 
 ### Log Summary
 
 ![Log Summary](03_assets/log-summary.png)
 
-## Terraform
+---
 
-The `02_src/terraform` directory contains the Terraform configuration used to provision the Azure infrastructure.
+## 5. API Keys & Environment Variables
 
-Main Terraform files:
+The current demonstration environment does not require API keys or external application credentials.
 
-* `main.tf`
-* `variables.tf`
-* `outputs.tf`
-* `versions.tf`
-* `.terraform.lock.hcl`
+The following configuration is used by Docker Compose:
 
-Terraform state files and sensitive configuration files are intentionally excluded from the submission.
+* Elasticsearch runs on port `9200`
+* Logstash runs on port `5044`
+* Kibana runs on port `5601`
 
-## Limitations
+Kibana connects to Elasticsearch using:
 
-* Elasticsearch security is disabled in the current demonstration environment.
+```text
+http://elasticsearch:9200
+```
+
+The current demonstration environment has Elasticsearch security disabled:
+
+```text
+xpack.security.enabled=false
+```
+
+No passwords, API keys, or sensitive credentials are required for the local demonstration.
+
+For Azure deployment, Terraform requires the appropriate Azure authentication and subscription configuration. Sensitive Terraform configuration and state files are intentionally excluded from the submission package.
+
+---
+
+## 6. Known Issues
+
+* Elasticsearch security and authentication are disabled in the current demonstration environment.
 * Elasticsearch is configured as a single-node deployment.
-* The project uses a sample application log dataset rather than a large production dataset.
-* The current version does not implement AI-based anomaly detection.
+* The project uses a sample application log dataset containing 100 records rather than a large production dataset.
+* The current version does not include AI-based anomaly detection.
+* The project is designed as a demonstration and internal log analytics platform rather than a full SIEM solution.
 
-## Future Improvements
+### Future Improvements
 
 Possible future improvements include:
 
@@ -221,3 +262,4 @@ Possible future improvements include:
 * Using larger and more diverse production-like datasets
 * Adding automated alerting
 * Adding AI-based anomaly detection and log analysis
+* Supporting additional application log formats
