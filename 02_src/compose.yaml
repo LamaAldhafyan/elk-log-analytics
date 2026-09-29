@@ -2,32 +2,47 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.5.3
-    container_name: elasticsearch
+    container_name: elasticsearch-secure
+    restart: unless-stopped
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9201:9200"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
 
   logstash:
     image: docker.elastic.co/logstash/logstash:9.5.3
-    container_name: logstash
+    container_name: logstash-secure
+    restart: unless-stopped
+    env_file:
+      - .env
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
       - ../01_data:/usr/share/logstash/logs
+      - ./logstash/http_ca.crt:/usr/share/logstash/config/certs/http_ca.crt:ro
     ports:
-      - "5044:5044"
+      - "127.0.0.1:5045:5044"
     depends_on:
       - elasticsearch
 
   kibana:
     image: docker.elastic.co/kibana/kibana:9.5.3
-    container_name: kibana
+    container_name: kibana-secure
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=${KIBANA_USER}
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - SERVER_SSL_ENABLED=true
+      - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/kibana.crt
+      - SERVER_SSL_KEY=/usr/share/kibana/config/certs/kibana.key
+    volumes:
+      - ./kibana-certs/kibana.crt:/usr/share/kibana/config/certs/kibana.crt:ro
+      - ./kibana-certs/kibana.key:/usr/share/kibana/config/certs/kibana.key:ro
     ports:
       - "5601:5601"
     depends_on:
