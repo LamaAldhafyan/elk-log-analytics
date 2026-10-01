@@ -1,0 +1,2 @@
+# No Python dependencies are required for this project.
+# The project uses Docker, Docker Compose, Elasticsearch, Logstash, Kibana, and Terraform.
